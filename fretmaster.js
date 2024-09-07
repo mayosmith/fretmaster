@@ -14,6 +14,9 @@ let timeRemaining;
 let score = 0;
 let timeLimit = 20;
 let audioContext;
+let playSpeed = 3000;
+let sequence = []; // Move this outside the function
+let isPlaying = false; // Add this to track if a sequence is currently playing
 
 
 
@@ -261,7 +264,7 @@ function drawNeck() {
     const height = fretboardHeight;
 
     // Fill each cell in column 0 with very light grey
-    ctx.fillStyle = 'rgba(240, 240, 240, 0.5)'; // Very light grey with some transparency
+    ctx.fillStyle = 'rgba(220, 220, 220, 0.5)'; // 50% darker very light grey with some transparency
     for (let i = 0; i < 6; i++) {
         ctx.fillRect(0, i * cellWidth, cellWidth, cellWidth);
     }
@@ -303,9 +306,14 @@ function drawNeck() {
     });
 }
 function startGame() {
+    if (isPlaying) return; // Don't start a new game if a sequence is still playing
+    
     const canvas = document.getElementById('myCanvas');
     const ctx = canvas.getContext('2d');
     // Create a single AudioContext for the entire application
+    if (audioContext) {
+        audioContext.close();
+    }
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
   
@@ -318,15 +326,21 @@ function startGame() {
 
     // Set a new random note
     randomNote = Math.floor(Math.random() * 12);
+
+    const noteName = noteNames[randomNote];
+    const text = `Play: ${noteName.slice(0, -1)} `;
+    ctx.font = '18px Arial'; // Set the font size to 32px (twice as big as the default 16px)
+    ctx.fillText(text, canvas.width / 2, canvas.height - 16); // Adjusted y-coordinate to account for larger font
     // Call the playAllNotes function with the random note
     playAllNotes(randomNote);
 
     
     // Reset and start the countdown timer
-    clearInterval(countdownInterval);
+    /*clearInterval(countdownInterval);
     timeRemaining = 25;
     updateCountdown(); // Call this immediately to draw the initial state
     countdownInterval = setInterval(updateCountdown, 1000);
+    */
 }
 
 function updateCountdown() {
@@ -352,7 +366,7 @@ function updateCountdown() {
 
     if (timeRemaining <= 0) {
         clearInterval(countdownInterval);
-        startGame(); // Start a new game when time runs out
+        //startGame(); // Start a new game when time runs out
     } else {
         timeRemaining--;
     }
@@ -470,32 +484,30 @@ function playAllNotesInSemitone(st) {
 */
 
 function playAllNotes(st) {
+    if (isPlaying) return; // Don't start a new sequence if one is already playing
+    
+    isPlaying = true;
+    sequence = []; // Reset the sequence
+    
     const canvas = document.getElementById('myCanvas');
     const ctx = canvas.getContext('2d');
     const cellWidth = canvas.width / 18;
-    let sequence = [];
+    
     gneck.forEach((string, stringIndex) => {
         string.forEach((note) => {
             if (note.semitone === st) {
-                
-                sequence.push(note);
-                /*
-                // Play the note
-                playSound(note.frequency);
-                
-                // Highlight the square
-                ctx.fillStyle = 'rgba(144, 238, 144, 0.6)'; // Light green with some transparency
-                ctx.fillRect(note.fret * cellWidth, stringIndex * cellWidth, cellWidth, cellWidth);
-                
-                // Redraw the grid lines for the filled square
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(note.fret * cellWidth, stringIndex * cellWidth, cellWidth, cellWidth);
-*/
-            
+                if (document.getElementById('position').checked) {
+                    if(note.fret > 5 && note.fret < 10){
+                        sequence.push(note);
+                    }
+                }
+                else{
+                    sequence.push(note);
+                }
             }
         });
+    });
 
-    // Define a recursive function to play and highlight notes in sequence
     function playSequence(index) {
         if (index < sequence.length) {
             const note = sequence[index];
@@ -514,16 +526,34 @@ function playAllNotes(st) {
             // Schedule the next note to be played after a delay
             setTimeout(() => {
                 playSequence(index + 1);
-            }, 1700); // 500ms for note duration + 200ms pause
+            }, playSpeed); // 500ms for note duration + 200ms pause
+        }
+        else {
+            console.log('Sequence complete');
+            isPlaying = false; // Reset the playing flag
+            startGame(); // Start a new game
         }
     }
 
-    // Start playing the sequence
     playSequence(0);
-    });
-
 }
 
+
+function setSpeed(s) {
+    console.log('Setting speed to ' + s);
+    switch(s) {
+        case 'fast':
+            playSpeed = 2000;
+            break;
+        case 'slow':
+            playSpeed = 4000;
+            break;
+        case 'medium':
+        default:
+            playSpeed = 3000;
+            break;
+    }
+}
 
 
 
