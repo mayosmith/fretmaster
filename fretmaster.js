@@ -443,6 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('myCanvas');
     if (canvas) {
         canvas.addEventListener('click', clickNeck);
+        drawNeck(); // Draw the neck when the page loads
         //startGame(); // Start the first game when the page loads
     } else {
         console.error('Canvas element not found');
