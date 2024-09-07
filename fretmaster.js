@@ -80,7 +80,7 @@ function playSound(freq) {
     oscillator.stop(audioContext.currentTime + duration);
 }
 
-
+/*
 
 const noteFreq = [
     { note: 'E2', frequency: 82.41 },
@@ -126,7 +126,7 @@ const noteFreq = [
     { note: 'G#5', frequency: 830.61 },
     { note: 'A5', frequency: 880.00 }
 ];
-
+*/
 
 const gneck = [
     [
@@ -498,7 +498,7 @@ function playAllNotes(st) {
         string.forEach((note) => {
             if (note.semitone === st) {
                 if (document.getElementById('position').checked) {
-                    if(note.fret > 5 && note.fret < 10){
+                    if(note.fret > 3 && note.fret < 10){
                         sequence.push(note);
                     }
                 }
