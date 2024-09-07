@@ -499,7 +499,11 @@ function playAllNotes(st) {
             if (note.semitone === st) {
                 if (document.getElementById('position').checked) {
                     if(note.fret > 4 && note.fret < 9){
-                        sequence.push(note);
+                        console.log(note.note);
+                        if (!note.note.includes('#')) {
+                            sequence.push(note);
+                        }
+                        
                     }
                 }
                 else{
