@@ -498,7 +498,7 @@ function playAllNotes(st) {
         string.forEach((note) => {
             if (note.semitone === st) {
                 if (document.getElementById('position').checked) {
-                    if(note.fret > 3 && note.fret < 10){
+                    if(note.fret > 4 && note.fret < 9){
                         sequence.push(note);
                     }
                 }
@@ -517,7 +517,7 @@ function playAllNotes(st) {
             playSound(note.frequency);
             
             // Highlight the square
-            ctx.fillStyle = 'rgba(144, 238, 144, 0.6)'; // Light green with some transparency
+            ctx.fillStyle = getNoteColor(note.note); //'rgba(144, 238, 144, 0.6)'; // Light green with some transparency
             ctx.fillRect(note.fret * cellWidth, note.string * cellWidth, cellWidth, cellWidth);
             
             // Redraw the grid lines for the filled square
@@ -553,6 +553,30 @@ function setSpeed(s) {
         default:
             playSpeed = 3000;
             break;
+    }
+}
+
+function getNoteColor(noteName) {
+    // Extract only the first character of the note name
+    const baseNote = noteName.charAt(0);
+    
+    switch (baseNote) {
+        case 'C':
+            return '#FF0000'; // Red
+        case 'D':
+            return '#FFA500'; // Orange
+        case 'E':
+            return '#FFFF00'; // Yellow
+        case 'F':
+            return '#00FF00'; // Green
+        case 'G':
+            return '#0000FF'; // Blue
+        case 'A':
+            return '#800080'; // Purple
+        case 'B':
+            return '#FFC0CB'; // Pink
+        default:
+            return '#000000'; // Black (for any unexpected input)
     }
 }
 
