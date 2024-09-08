@@ -1,3 +1,7 @@
+const SLOW = 4000;
+const MEDIUM = 2000;
+const FAST = 1000;
+
 const guitarFretboard = [
     ['E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 'C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5', 'A5'],
     ['B3', 'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 'C5', 'C#5', 'D5', 'D#5', 'E5'],
@@ -497,43 +501,36 @@ function playAllNotes(st) {
     gneck.forEach((string, stringIndex) => {
         string.forEach((note) => {
             if (note.semitone === st) {
-                if (document.getElementById('position').checked) {
-                    if(note.fret > 4 && note.fret < 9){
-                        console.log(note.note);
-                        if (!note.note.includes('#')) {
-                            sequence.push(note);
-                        }
-                        
-                    }
-                }
-                else{
+
+                if (!createPositionSequence(note)) {
                     sequence.push(note);
                 }
+
             }
         });
     });
+
+    // reverse the sequence sometimes
+    if (Math.random() < 0.5) {
+        sequence = reverseArray(sequence);
+    }
 
     function playSequence(index) {
         if (index < sequence.length) {
             const note = sequence[index];
             
-            // Play the note
             playSound(note.frequency);
             
-            // Highlight the square
-            ctx.fillStyle = getNoteColor(note.note); //'rgba(144, 238, 144, 0.6)'; // Light green with some transparency
+            ctx.fillStyle = getNoteColor(note.note);
             ctx.fillRect(note.fret * cellWidth, note.string * cellWidth, cellWidth, cellWidth);
             
-            // Redraw the grid lines for the filled square
             ctx.strokeStyle = 'black';
             ctx.strokeRect(note.fret * cellWidth, note.string * cellWidth, cellWidth, cellWidth);
             
-            // Schedule the next note to be played after a delay
             setTimeout(() => {
                 playSequence(index + 1);
-            }, playSpeed); // 500ms for note duration + 200ms pause
-        }
-        else {
+            }, playSpeed);
+        } else {
             console.log('Sequence complete');
             isPlaying = false; // Reset the playing flag
             startGame(); // Start a new game
@@ -543,19 +540,23 @@ function playAllNotes(st) {
     playSequence(0);
 }
 
+// Add this new function to shuffle the array
+function reverseArray(array) {
+    return array.reverse();
+}
 
 function setSpeed(s) {
     console.log('Setting speed to ' + s);
     switch(s) {
         case 'fast':
-            playSpeed = 2000;
+            playSpeed = FAST;
             break;
         case 'slow':
-            playSpeed = 4000;
+            playSpeed = SLOW;
             break;
         case 'medium':
         default:
-            playSpeed = 3000;
+            playSpeed = MEDIUM;
             break;
     }
 }
@@ -585,6 +586,35 @@ function getNoteColor(noteName) {
 }
 
 
+function createPositionSequence(note) {
+    const position1 = document.getElementById('position1').checked;
+    const position5 = document.getElementById('position5').checked;
+    const position7 = document.getElementById('position7').checked;
+    result = position1 || position5 || position7;
+
+
+    if (position1 && note.fret >= 1 && note.fret <= 4) {
+        if (!note.note.includes('#')) {
+            sequence.push(note);
+        }
+    }
+
+    if (position5 && note.fret >= 5 && note.fret <= 8) {
+        if (!note.note.includes('#')) {
+            sequence.push(note);
+
+        }
+    }
+
+    if (position7 && note.fret >= 7 && note.fret <= 11) {
+        if (!note.note.includes('#')) {
+            sequence.push(note);
+
+        }
+    }
+
+    return result;
+}
 
 
 
