@@ -593,7 +593,7 @@ function createPositionSequence(note) {
     result = position1 || position5 || position7;
 
 
-    if (position1 && note.fret >= 1 && note.fret <= 4) {
+    if (position1 && note.fret >= 0 && note.fret <= 4) {
         if (!note.note.includes('#')) {
             sequence.push(note);
         }
