@@ -84,6 +84,37 @@ function playSound(freq) {
     oscillator.stop(audioContext.currentTime + duration);
 }
 
+function playTriad(rootNote) {
+    const rootNoteObj = gneck.flat().find(n => n.note === rootNote);
+    if (!rootNoteObj) {
+        console.error(`Root note ${rootNote} not found in gneck`);
+        return;
+    }
+
+    let rootIndex = noteNames.indexOf(rootNoteObj.note.slice(0, -1)); // Remove octave number
+    if (rootIndex === -1) {
+        console.error(`Root note ${rootNote} not found in noteNames`);
+        return;
+    }
+
+    // Adjust rootIndex if the note is above the 12th fret
+    if (rootNoteObj.fret >= 12) {
+        rootIndex += 12;
+    }
+
+    const triad = [rootIndex, rootIndex + 4, rootIndex + 7];
+    
+    triad.forEach(index => {
+        const noteName = noteNames[index % noteNames.length];
+        const noteObj = gneck.flat().find(n => n.note.startsWith(noteName));
+        if (noteObj && typeof noteObj.frequency === 'number') {
+            playSound(noteObj.frequency);
+        } else {
+            console.error(`Valid frequency not found for note ${noteName}`);
+        }
+    });
+}
+
 /*
 
 const noteFreq = [
@@ -336,7 +367,8 @@ function startGame() {
     ctx.font = '18px Arial'; // Set the font size to 32px (twice as big as the default 16px)
     ctx.fillText(text, canvas.width / 2, canvas.height - 16); // Adjusted y-coordinate to account for larger font
     // Call the playAllNotes function with the random note
-    playAllNotes(randomNote);
+    //playAllNotes(randomNote); //tempora
+    playTriad(randomNote);
 
     
     // Reset and start the countdown timer
