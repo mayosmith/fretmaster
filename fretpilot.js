@@ -18,7 +18,7 @@ let timeRemaining;
 let score = 0;
 let timeLimit = 20;
 let audioContext;
-let playSpeed = 3000;
+let playSpeed = FAST;
 let gamePaused = false;
 
 let isPlaying = false; // Add this to track if a noteSequence is currently playing
