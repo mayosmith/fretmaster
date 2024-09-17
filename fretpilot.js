@@ -19,6 +19,7 @@ let score = 0;
 let timeLimit = 20;
 let audioContext;
 let playSpeed = 3000;
+let gamePaused = false;
 
 let isPlaying = false; // Add this to track if a noteSequence is currently playing
 
@@ -278,7 +279,7 @@ function drawNeck() {
         }
     });
 }
-function startGame() {
+function playRound() {
     if (isPlaying) return; // Don't start a new game if a sequence is still playing
     
     const canvas = document.getElementById('myCanvas');
@@ -293,7 +294,7 @@ function startGame() {
 
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     // Redraw the neck
     drawNeck();
 
@@ -308,6 +309,38 @@ function startGame() {
     // Call the playRandomNotes function with the random note
     createNoteSequence(randomSemitone);
     playRandomNotes();
+
+
+}
+
+function pauseGame(){
+    gamePaused = true;
+}
+
+function resumeGame(){
+    gamePaused = false;
+}
+
+function startGame() {
+    gamePaused = false;
+
+    if (startButton.textContent === 'Start') {
+        startButton.textContent = 'Stop';
+    }
+    else {
+        startButton.textContent = 'Start';
+        pauseGame();
+    }
+
+    if (isPlaying) return; // Don't start a new game if a sequence is still playing
+    
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+    // Create a single AudioContext for the entire application
+    if (audioContext) {
+        audioContext.close();
+    }
+    playRound();
 
     
 
@@ -643,6 +676,9 @@ function playSequence(sequence, index = 0) {
     } else {
         console.log('Sequence complete');
         isPlaying = false; // Reset the playing flag
-        startGame(); // Start a new game
+        if(!gamePaused) {
+            playRound(); // play another round
+
+        }
     }
 }
