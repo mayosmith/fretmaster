@@ -1,15 +1,15 @@
 const SLOW = 4000;
 const MEDIUM = 2000;
 const FAST = 1000;
+const THIRDS = 3;
+const POSITIONS = 2;
+const ALL = 1;
+const MAJOR3RD = 3;
+const PERFECT5TH = 5;
+const SEVENTH = 7;  
 
-const guitarFretboard = [
-    ['E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 'C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5', 'A5'],
-    ['B3', 'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 'C5', 'C#5', 'D5', 'D#5', 'E5'],
-    ['G3', 'G#3', 'A3', 'A#3', 'B3', 'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 'C5'],
-    ['D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3', 'A#3', 'B3', 'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4'],
-    ['A2', 'A#2', 'B2', 'C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3', 'A#3', 'B3', 'C4', 'C#4', 'D4'],
-    ['E2', 'F2', 'F#2', 'G2', 'G#2', 'A2', 'A#2', 'B2', 'C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3']
-];
+
+let noteSequence = []; //noteSequence[] is the crux of the biscuit
 
 
 let randomNote;
@@ -19,151 +19,29 @@ let score = 0;
 let timeLimit = 20;
 let audioContext;
 let playSpeed = 3000;
-let sequence = []; // Move this outside the function
-let isPlaying = false; // Add this to track if a sequence is currently playing
 
-
+let isPlaying = false; // Add this to track if a noteSequence is currently playing
 
 
 const noteNames = ['A2', 'A#2', 'B2', 'C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3',
-                   'A3', 'A#3', 'B3', 'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4',
-                   'A4', 'A#4', 'B4', 'C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5'];
+    'A3', 'A#3', 'B3', 'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4',
+    'A4', 'A#4', 'B4', 'C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5'];
 
-function playSound(freq) {
-    if (!audioContext) {
-        console.error('AudioContext not initialized. User interaction required.');
-        return;
-    }
 
-    const duration = 0.5;
-    const attackTime = 0.01;
-    const decayTime = 0.2;
-    const sustainLevel = 0.8;
-    const releaseTime = 0.3;
 
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    const distortion = audioContext.createWaveShaper();
-
-    // Use a combination of sawtooth and triangle waves
-    oscillator.type = 'sawtooth';
-    const realCoeffs = new Float32Array([0, 0.4, 0.4, 0.2, 0.1, 0.1, 0.05]);
-    const imagCoeffs = new Float32Array(realCoeffs.length);
-    const customWave = audioContext.createPeriodicWave(realCoeffs, imagCoeffs);
-    oscillator.setPeriodicWave(customWave);
-
-    oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
-
-    // ADSR envelope
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + attackTime);
-    gainNode.gain.linearRampToValueAtTime(sustainLevel, audioContext.currentTime + attackTime + decayTime);
-    gainNode.gain.setValueAtTime(sustainLevel, audioContext.currentTime + duration - releaseTime);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
-
-    // Distortion
-    function makeDistortionCurve(amount) {
-        const k = typeof amount === 'number' ? amount : 50;
-        const n_samples = 44100;
-        const curve = new Float32Array(n_samples);
-        const deg = Math.PI / 180;
-        for (let i = 0; i < n_samples; ++i) {
-            const x = i * 2 / n_samples - 1;
-            curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
-        }
-        return curve;
-    }
-    distortion.curve = makeDistortionCurve(20);
-    distortion.oversample = '4x';
-
-    oscillator.connect(gainNode);
-    gainNode.connect(distortion);
-    distortion.connect(audioContext.destination);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + duration);
-}
-
-function playTriad(rootNote) {
-    const rootNoteObj = gneck.flat().find(n => n.note === rootNote);
-    if (!rootNoteObj) {
-        console.error(`Root note ${rootNote} not found in gneck`);
-        return;
-    }
-
-    let rootIndex = noteNames.indexOf(rootNoteObj.note.slice(0, -1)); // Remove octave number
-    if (rootIndex === -1) {
-        console.error(`Root note ${rootNote} not found in noteNames`);
-        return;
-    }
-
-    // Adjust rootIndex if the note is above the 12th fret
-    if (rootNoteObj.fret >= 12) {
-        rootIndex += 12;
-    }
-
-    const triad = [rootIndex, rootIndex + 4, rootIndex + 7];
-    
-    triad.forEach(index => {
-        const noteName = noteNames[index % noteNames.length];
-        const noteObj = gneck.flat().find(n => n.note.startsWith(noteName));
-        if (noteObj && typeof noteObj.frequency === 'number') {
-            playSound(noteObj.frequency);
-        } else {
-            console.error(`Valid frequency not found for note ${noteName}`);
-        }
-    });
-}
-
-/*
-
-const noteFreq = [
-    { note: 'E2', frequency: 82.41 },
-    { note: 'F2', frequency: 87.31 },
-    { note: 'F#2', frequency: 92.50 },
-    { note: 'G2', frequency: 98.00 },
-    { note: 'G#2', frequency: 103.83 },
-    { note: 'A2', frequency: 110.00 },
-    { note: 'A#2', frequency: 116.54 },
-    { note: 'B2', frequency: 123.47 },
-    { note: 'C3', frequency: 130.81 },
-    { note: 'C#3', frequency: 138.59 },
-    { note: 'D3', frequency: 146.83 },
-    { note: 'D#3', frequency: 155.56 },
-    { note: 'E3', frequency: 164.81 },
-    { note: 'F3', frequency: 174.61 },
-    { note: 'F#3', frequency: 185.00 },
-    { note: 'G3', frequency: 196.00 },
-    { note: 'G#3', frequency: 207.65 },
-    { note: 'A3', frequency: 220.00 },
-    { note: 'A#3', frequency: 233.08 },
-    { note: 'B3', frequency: 246.94 },
-    { note: 'C4', frequency: 261.63 },
-    { note: 'C#4', frequency: 277.18 },
-    { note: 'D4', frequency: 293.66 },
-    { note: 'D#4', frequency: 311.13 },
-    { note: 'E4', frequency: 329.63 },
-    { note: 'F4', frequency: 349.23 },
-    { note: 'F#4', frequency: 369.99 },
-    { note: 'G4', frequency: 392.00 },
-    { note: 'G#4', frequency: 415.30 },
-    { note: 'A4', frequency: 440.00 },
-    { note: 'A#4', frequency: 466.16 },
-    { note: 'B4', frequency: 493.88 },
-    { note: 'C5', frequency: 523.25 },
-    { note: 'C#5', frequency: 554.37 },
-    { note: 'D5', frequency: 587.33 },
-    { note: 'D#5', frequency: 622.25 },
-    { note: 'E5', frequency: 659.25 },
-    { note: 'F5', frequency: 698.46 },
-    { note: 'F#5', frequency: 739.99 },
-    { note: 'G5', frequency: 783.99 },
-    { note: 'G#5', frequency: 830.61 },
-    { note: 'A5', frequency: 880.00 }
+const whiteKeySemitones = [
+    { note: 'A', semitone: 0 },
+    { note: 'B', semitone: 2 },
+    { note: 'C', semitone: 3 },
+    { note: 'D', semitone: 5 },
+    { note: 'E', semitone: 7 },
+    { note: 'F', semitone: 8 },
+    { note: 'G', semitone: 10 }
 ];
-*/
+// Corresponding to: A, B, C, D, E, F, G
 
-const gneck = [
+
+const fretBoard = [
     [
         { string: 0, fret: 0, semitone: 7, note: 'E4', frequency: 329.63 },
         { string: 0, fret: 1, semitone: 8, note: 'F4', frequency: 349.23 },
@@ -285,6 +163,66 @@ const gneck = [
         { string: 5, fret: 17, semitone: 0, note: 'A3', frequency: 220.00 }
     ]
 ];
+
+
+
+function playSound(freq) {
+    if (!audioContext) {
+        console.error('AudioContext not initialized. User interaction required.');
+        return;
+    }
+
+    const duration = 0.5;
+    const attackTime = 0.01;
+    const decayTime = 0.2;
+    const sustainLevel = 0.8;
+    const releaseTime = 0.3;
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    const distortion = audioContext.createWaveShaper();
+
+    // Use a combination of sawtooth and triangle waves
+    oscillator.type = 'sawtooth';
+    const realCoeffs = new Float32Array([0, 0.4, 0.4, 0.2, 0.1, 0.1, 0.05]);
+    const imagCoeffs = new Float32Array(realCoeffs.length);
+    const customWave = audioContext.createPeriodicWave(realCoeffs, imagCoeffs);
+    oscillator.setPeriodicWave(customWave);
+
+    oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+
+    // ADSR envelope
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + attackTime);
+    gainNode.gain.linearRampToValueAtTime(sustainLevel, audioContext.currentTime + attackTime + decayTime);
+    gainNode.gain.setValueAtTime(sustainLevel, audioContext.currentTime + duration - releaseTime);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
+
+    // Distortion
+    function makeDistortionCurve(amount) {
+        const k = typeof amount === 'number' ? amount : 50;
+        const n_samples = 44100;
+        const curve = new Float32Array(n_samples);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < n_samples; ++i) {
+            const x = i * 2 / n_samples - 1;
+            curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+        }
+        return curve;
+    }
+    distortion.curve = makeDistortionCurve(20);
+    distortion.oversample = '4x';
+
+    oscillator.connect(gainNode);
+    gainNode.connect(distortion);
+    distortion.connect(audioContext.destination);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
+}
+
+
+
 function drawNeck() {
     const canvas = document.getElementById('myCanvas');
     const ctx = canvas.getContext('2d');
@@ -360,23 +298,19 @@ function startGame() {
     drawNeck();
 
     // Set a new random note
-    randomNote = Math.floor(Math.random() * 12);
+    randomIndex = Math.floor(Math.random() * 7);
 
-    const noteName = noteNames[randomNote];
-    const text = `Play: ${noteName.slice(0, -1)} `;
+    const randomSemitone = whiteKeySemitones[randomIndex].semitone;
+    console.log("noteName", whiteKeySemitones[randomIndex].note);
+    const text = "Root: " + whiteKeySemitones[randomIndex].note; // ${noteName.slice(0, -1)} `;
     ctx.font = '18px Arial'; // Set the font size to 32px (twice as big as the default 16px)
     ctx.fillText(text, canvas.width / 2, canvas.height - 16); // Adjusted y-coordinate to account for larger font
-    // Call the playAllNotes function with the random note
-    //playAllNotes(randomNote); //tempora
-    playTriad(randomNote);
+    // Call the playRandomNotes function with the random note
+    createNoteSequence(randomSemitone);
+    playRandomNotes();
 
     
-    // Reset and start the countdown timer
-    /*clearInterval(countdownInterval);
-    timeRemaining = 25;
-    updateCountdown(); // Call this immediately to draw the initial state
-    countdownInterval = setInterval(updateCountdown, 1000);
-    */
+
 }
 
 function updateCountdown() {
@@ -431,7 +365,7 @@ function clickNeck(event) {
         return;
     }
     
-    const clickedNote = guitarFretboard[row][col];
+    const clickedNote = fretBoard[row][col].note;
     
     console.log(`Clicked on fret: ${col}, string: ${row + 1}, note: ${clickedNote}`);
    
@@ -494,86 +428,61 @@ function adjustScore(s) {
         score = Math.max(0, score - 1);
     }
 }
-/*
-function playAllNotesInSemitone(st) {
-    const canvas = document.getElementById('myCanvas');
-    const ctx = canvas.getContext('2d');
-    const cellWidth = canvas.width / 18;
 
-    fretBoardSemitones.forEach((string, stringIndex) => {
-        string.forEach((semitone, fretIndex) => {
-            if (semitone === st) {
-                const note = gneck[stringIndex][fretIndex];
-                console.log(note);
-                //playNote(note);
+function createNoteSequence(st) {
+    noteSequence = [];
+
+    fretBoard.forEach((string, stringIndex) => {
+        string.forEach((note) => {
+            if (note.semitone === st) {  
+                console.log("Root");
+                addToNoteSequence(note);
                 
-                // Highlight the square
-                ctx.fillStyle = 'rgba(144, 238, 144, 0.6)'; // Light green with some transparency
-                ctx.fillRect(fretIndex * cellWidth, stringIndex * cellWidth, cellWidth, cellWidth);
-                
-                // Redraw the grid lines for the filled square
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(fretIndex * cellWidth, stringIndex * cellWidth, cellWidth, cellWidth);
             }
+            //Major 3rd
+            console.log("(st + 4) % 12): ", (st + 4) % 12);
+            if (note.semitone === (st + 4) % 12) { 
+                console.log("Major 3rd");
+                if (checkInterval(MAJOR3RD)) {
+                    addToNoteSequence(note);  
+                }
+            }
+            //Perfect 5th
+            if (note.semitone === (st + 7) % 12) {
+                if (checkInterval(PERFECT5TH)) {
+                    addToNoteSequence(note);
+                }
+               
+            }
+            //Major 7th
+            if (note.semitone === (st + 11) % 12) { 
+                if (checkInterval(SEVENTH)) {
+                    addToNoteSequence(note);
+                }
+                
+            }
+
         });
     });
 }
-*/
 
-function playAllNotes(st) {
-    if (isPlaying) return; // Don't start a new sequence if one is already playing
+function playRandomNotes() {
+    if (isPlaying) return; // Don't start a new noteSequence if one is already playing
     
     isPlaying = true;
-    sequence = []; // Reset the sequence
-    
-    const canvas = document.getElementById('myCanvas');
-    const ctx = canvas.getContext('2d');
-    const cellWidth = canvas.width / 18;
-    
-    gneck.forEach((string, stringIndex) => {
-        string.forEach((note) => {
-            if (note.semitone === st) {
 
-                if (!createPositionSequence(note)) {
-                    sequence.push(note);
-                }
-
-            }
-        });
-    });
 
     // reverse the sequence sometimes
     if (Math.random() < 0.5) {
-        sequence = reverseArray(sequence);
+        noteSequence = reverseOrder(noteSequence);
     }
 
-    function playSequence(index) {
-        if (index < sequence.length) {
-            const note = sequence[index];
-            
-            playSound(note.frequency);
-            
-            ctx.fillStyle = getNoteColor(note.note);
-            ctx.fillRect(note.fret * cellWidth, note.string * cellWidth, cellWidth, cellWidth);
-            
-            ctx.strokeStyle = 'black';
-            ctx.strokeRect(note.fret * cellWidth, note.string * cellWidth, cellWidth, cellWidth);
-            
-            setTimeout(() => {
-                playSequence(index + 1);
-            }, playSpeed);
-        } else {
-            console.log('Sequence complete');
-            isPlaying = false; // Reset the playing flag
-            startGame(); // Start a new game
-        }
-    }
-
-    playSequence(0);
+    // Call playSequence with the populated sequence
+    playSequence(noteSequence);
 }
 
 // Add this new function to shuffle the array
-function reverseArray(array) {
+function reverseOrder(array) {
     return array.reverse();
 }
 
@@ -599,7 +508,7 @@ function getNoteColor(noteName) {
     
     switch (baseNote) {
         case 'C':
-            return '#FF0000'; // Red
+            return '#FF0000'; // Red   
         case 'D':
             return '#FFA500'; // Orange
         case 'E':
@@ -618,36 +527,122 @@ function getNoteColor(noteName) {
 }
 
 
-function createPositionSequence(note) {
+
+function addToNoteSequence(note, type) {
+
+    if (checkPosition(note, type)) {
+        noteSequence.push(note);
+    }
+
+    return 1;
+}
+
+function checkInterval(type) {
+    if(type === MAJOR3RD) {
+        if(document.getElementById('major3rd').checked) {
+            return 1;
+        }
+    }
+    if(type === PERFECT5TH) {
+        if(document.getElementById('perfect5th').checked) {
+            return 1;
+        }
+    }
+    if(type === SEVENTH) {
+        if(document.getElementById('seventh').checked) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+function checkPosition(note) {
+
+    console.log("XXXXXXX-- CHECK POSITION --XXXXXX");
+
     const position1 = document.getElementById('position1').checked;
     const position5 = document.getElementById('position5').checked;
     const position7 = document.getElementById('position7').checked;
-    result = position1 || position5 || position7;
 
+        console.log(position1, position5, position7);
+            if (position1 && note.fret >= 0 && note.fret <= 4) {
+                return 1;
+            }
 
-    if (position1 && note.fret >= 0 && note.fret <= 4) {
-        if (!note.note.includes('#')) {
-            sequence.push(note);
-        }
-    }
+            if (position5 && note.fret >= 5 && note.fret <= 8) {
+                return 1;
+            }
 
-    if (position5 && note.fret >= 5 && note.fret <= 8) {
-        if (!note.note.includes('#')) {
-            sequence.push(note);
+            if (position7 && note.fret >= 7 && note.fret <= 11) {
+                return 1;
+            }
+            // If all positions are unchecked, return 1
+            if (!position1 && !position5 && !position7) {
+                return 1;
+            }
 
-        }
-    }
-
-    if (position7 && note.fret >= 7 && note.fret <= 11) {
-        if (!note.note.includes('#')) {
-            sequence.push(note);
-
-        }
-    }
-
-    return result;
+    return 0;
 }
 
+function ifInterval(type) {
+    if(type === MAJOR3RD) {
+        if(document.getElementById('major3rd').checked) {
+            return 1;
+        }
+    }
+    if(type === PERFECT5TH) {
+        if(document.getElementById('perfect5th').checked) {
+            return 1;
+        }
+    }
+    if(type === SEVENTH) {
+        if(document.getElementById('seventh').checked) {
+            return 1;
+        }
+    }
+        return 0;
+    }
 
 
 
+
+
+
+// Move playSequence to the global scope
+function playSequence(sequence, index = 0) {
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+    const cellWidth = canvas.width / 18;
+
+    if (index < noteSequence.length) {
+        const note = noteSequence[index];
+        
+        playSound(note.frequency);
+        // Log the note being played
+        console.log(`Playing note: ${note.note} at fret ${note.fret} on string ${note.string}`);
+
+        
+        ctx.fillStyle = getNoteColor(note.note);
+        ctx.fillRect(note.fret * cellWidth, note.string * cellWidth, cellWidth, cellWidth);
+
+        // Display "#" if the note contains a sharp
+        if (note.note.includes('#')) {
+            ctx.fillStyle = 'white';
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('#', (note.fret + 0.5) * cellWidth, (note.string + 0.5) * cellWidth);
+        }
+        
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(note.fret * cellWidth, note.string * cellWidth, cellWidth, cellWidth);
+        
+        setTimeout(() => {
+            playSequence(noteSequence, index + 1);
+        }, playSpeed);
+    } else {
+        console.log('Sequence complete');
+        isPlaying = false; // Reset the playing flag
+        startGame(); // Start a new game
+    }
+}
