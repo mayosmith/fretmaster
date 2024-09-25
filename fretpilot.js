@@ -6,7 +6,7 @@ const POSITIONS = 2;
 const ALL = 1;
 const MAJOR3RD = 3;
 const PERFECT5TH = 5;
-const SEVENTH = 7;  
+const MINOR_SEVENTH = 7;  
 
 
 let noteSequence = []; //noteSequence[] is the crux of the biscuit
@@ -488,8 +488,8 @@ function createNoteSequence(st) {
                
             }
             //Major 7th
-            if (note.semitone === (st + 11) % 12) { 
-                if (checkInterval(SEVENTH)) {
+            if (note.semitone === (st + 10) % 12) { 
+                if (checkInterval(MINOR_SEVENTH)) {
                     addToNoteSequence(note);
                 }
                 
@@ -497,6 +497,7 @@ function createNoteSequence(st) {
 
         });
     });
+    sortNoteSequence(st);
 }
 
 function playRandomNotes() {
@@ -516,7 +517,18 @@ function playRandomNotes() {
 
 // Add this new function to shuffle the array
 function reverseOrder(array) {
-    return array.reverse();
+    // Separate root notes and other notes
+    const rootNotes = array.filter(note => note.semitone === array[0].semitone);
+    const otherNotes = array.filter(note => note.semitone !== array[0].semitone);
+
+     // Reverse the order of root notes
+    rootNotes.reverse();
+
+    // Reverse the order of other notes
+    otherNotes.reverse();
+
+    // Combine root notes and reversed other notes
+    return [...rootNotes, ...otherNotes];
 }
 
 function setSpeed(s) {
@@ -561,13 +573,26 @@ function getNoteColor(noteName) {
 
 
 
-function addToNoteSequence(note, type) {
+function addToNoteSequence(note) {
 
-    if (checkPosition(note, type)) {
+    if (checkPosition(note)) {
         noteSequence.push(note);
     }
 
     return 1;
+}
+
+function sortNoteSequence(st) {
+    noteSequence.sort((a, b) => {
+        // If a is the root note and b is not, a comes first
+        if (a.semitone === st && b.semitone !== st) return -1;
+        // If b is the root note and a is not, b comes first
+        if (b.semitone === st && a.semitone !== st) return 1;
+        // If both are not root notes, sort by semitone
+        if (a.semitone !== st && b.semitone !== st) return a.semitone - b.semitone;
+        // If both are root notes, maintain their relative order
+        return 0;
+    });
 }
 
 function checkInterval(type) {
@@ -581,7 +606,7 @@ function checkInterval(type) {
             return 1;
         }
     }
-    if(type === SEVENTH) {
+    if(type === MINOR_SEVENTH) {
         if(document.getElementById('seventh').checked) {
             return 1;
         }
@@ -628,8 +653,8 @@ function ifInterval(type) {
             return 1;
         }
     }
-    if(type === SEVENTH) {
-        if(document.getElementById('seventh').checked) {
+    if(type === MINOR_SEVENTH) {
+        if(document.getElementById('MINOR_SEVENTH').checked) {
             return 1;
         }
     }
