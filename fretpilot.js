@@ -22,7 +22,7 @@ let playSpeed = FAST;
 let gamePaused = false;
 
 let isPlaying = false; // Add this to track if a noteSequence is currently playing
-
+const TEXT_MARGIN = 10;
 
 const noteNames = ['A2', 'A#2', 'B2', 'C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3',
     'A3', 'A#3', 'B3', 'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4',
@@ -305,7 +305,7 @@ function playRound() {
     console.log("noteName", whiteKeySemitones[randomIndex].note);
     const text = "Root: " + whiteKeySemitones[randomIndex].note; // ${noteName.slice(0, -1)} `;
     ctx.font = '18px Arial'; // Set the font size to 32px (twice as big as the default 16px)
-    ctx.fillText(text, canvas.width / 2, canvas.height - 16); // Adjusted y-coordinate to account for larger font
+    ctx.fillText(text, TEXT_MARGIN, canvas.height - 16); // Adjusted y-coordinate to account for larger font
     // Call the playRandomNotes function with the random note
     createNoteSequence(randomSemitone);
     playRandomNotes();
